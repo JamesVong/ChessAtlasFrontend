@@ -1,0 +1,80 @@
+/* src/App.css */
+
+.container {
+  font-family: sans-serif;
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  /* Allow panels to wrap to the next line if space is tight */
+  flex-wrap: wrap; 
+}
+
+.left-panel {
+  flex: 1; /* Grow to fill space */
+  min-width: 300px; /* Minimum width before wrapping */
+}
+
+.right-panel {
+  flex: 1; /* Grow to fill space */
+  min-width: 400px;
+  max-width: 500px;
+}
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.image-preview {
+  max-width: 100%;
+  height: auto;
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+}
+
+.fen-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.fen-input {
+  flex-grow: 1;
+  padding: 8px;
+  font-family: monospace;
+}
+
+.button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  margin-top: 1rem;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.2em;
+  margin-top: 2rem;
+}
+
+/* --- THE RESPONSIVE MAGIC --- */
+/* This rule applies only when the screen width is 768px or less */
+@media (max-width: 768px) {
+  .container {
+    /* Change the direction to stack items vertically */
+    flex-direction: column;
+  }
+
+  .right-panel {
+    /* Ensure the board doesn't have an excessive max-width on mobile */
+    max-width: 100%;
+  }
+}
