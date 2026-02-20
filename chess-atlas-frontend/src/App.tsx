@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { Chess } from 'chess.js';
