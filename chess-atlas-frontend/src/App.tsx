@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, type FileRejection } from 'react-dropzone';
 import axios from 'axios';
 import { Chess } from 'chess.js';
 import Chessground from '@react-chess/chessground';
@@ -33,6 +33,62 @@ interface UploadedFile extends File {
   preview: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.chess-atlas.com/api/v1/analyze-board';
+const MAX_UPLOAD_SIZE_BYTES = 12 * 1024 * 1024; // 12MB
+const ACCEPTED_IMAGE_TYPES = {
+  'image/jpeg': ['.jpeg', '.jpg'],
+  'image/png': ['.png'],
+};
+
+const formatBytes = (bytes: number): string => {
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)} MB`;
+};
+
+const getFileValidationError = (file: File): string | null => {
+  const fileType = file.type.toLowerCase();
+  if (!Object.keys(ACCEPTED_IMAGE_TYPES).includes(fileType)) {
+    return 'Unsupported image format. Please upload a JPG or PNG image.';
+  }
+
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    return `Image is too large (${formatBytes(file.size)}). Please use a file smaller than ${formatBytes(MAX_UPLOAD_SIZE_BYTES)}.`;
+  }
+
+  return null;
+};
+
+const getApiErrorMessage = (err: unknown): string => {
+  if (!axios.isAxiosError(err)) {
+    return 'Upload failed. Please try again.';
+  }
+
+  if (err.response) {
+    const status = err.response.status;
+    const responseData = err.response.data as { message?: string } | undefined;
+    const serverMessage = responseData?.message;
+
+    if (status === 400) return serverMessage || 'The image could not be processed. Try another photo with the full board visible.';
+    if (status === 413) return 'The uploaded image is too large for the server. Try resizing the photo and upload again.';
+    if (status === 415) return 'Unsupported image format. Please upload a JPG or PNG image.';
+    if (status === 429) return 'Too many requests right now. Please wait a moment and try again.';
+    if (status >= 500) return 'The analysis server returned an error. Please try again in a minute.';
+
+    return serverMessage || `Upload failed (HTTP ${status}).`;
+  }
+
+  if (err.code === 'ECONNABORTED') {
+    return 'Upload timed out. Please try a smaller image or check your connection.';
+  }
+
+  if (err.code === 'ERR_NETWORK') {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'this site';
+    return `Network error contacting the API from ${origin}. If you are testing from mobile on local dev, this is often a CORS/origin issue.`;
+  }
+
+  return err.message || 'Upload failed. Please try again.';
+};
+
 function App() {
   // --- STATE MANAGEMENT (With TypeScript types) ---
   const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
@@ -53,10 +109,9 @@ function App() {
     formData.append('image', imageFile);
 
     try {
-      const API_URL = 'https://api.chess-atlas.com/api/v1/analyze-board';
       // Tell axios what type of response to expect
       const response = await axios.post<ApiResponse>(API_URL, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000,
       });
 
       console.log('Received response:', response.data);
@@ -84,8 +139,8 @@ function App() {
         setError(response.data.message || 'An unknown error occurred.');
       }
     } catch (err) {
-      setError('Failed to connect to the backend. Please check if the server is running.');
-      console.error(err);
+      setError(getApiErrorMessage(err));
+      console.error('Analyze request failed:', err);
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +150,12 @@ function App() {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
+      const validationError = getFileValidationError(file);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+
       const fileWithPreview = Object.assign(file, {
         preview: URL.createObjectURL(file),
       });
@@ -103,9 +164,33 @@ function App() {
     }
   }, []);
 
+  const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
+    const firstRejection = fileRejections[0];
+    const firstError = firstRejection?.errors[0];
+
+    if (!firstError) {
+      setError('Could not upload that file.');
+      return;
+    }
+
+    if (firstError.code === 'file-invalid-type') {
+      setError('Unsupported image format. Please upload a JPG or PNG image.');
+      return;
+    }
+
+    if (firstError.code === 'file-too-large') {
+      setError(`Image is too large. Please use a file smaller than ${formatBytes(MAX_UPLOAD_SIZE_BYTES)}.`);
+      return;
+    }
+
+    setError(firstError.message);
+  }, []);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': ['.jpeg', '.jpg', '.png'] },
+    onDropRejected,
+    accept: ACCEPTED_IMAGE_TYPES,
+    maxSize: MAX_UPLOAD_SIZE_BYTES,
     multiple: false,
   });
 
@@ -122,6 +207,12 @@ function App() {
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile();
           if (file) {
+            const validationError = getFileValidationError(file);
+            if (validationError) {
+              setError(validationError);
+              break;
+            }
+
             // Create the preview URL just like we do in onDrop
             const fileWithPreview = Object.assign(file, {
               preview: URL.createObjectURL(file),
@@ -142,7 +233,6 @@ function App() {
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [copied, setCopied] = useState<boolean>(false);
