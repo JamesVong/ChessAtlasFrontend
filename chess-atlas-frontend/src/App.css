@@ -37,17 +37,29 @@
 
 .column h2, .column h3 {
   margin-top: 0;
+  margin-bottom: 0.75rem;
   text-align: center;
 }
 
 /* --- IMAGE & BOARD SIZING --- */
-.image-preview {
+.preview-frame {
   width: 100%;
-  max-height: 45vh; 
-  object-fit: contain; 
+  max-width: 45vh;
+  min-height: 45vh;
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .board-column-content {
@@ -59,13 +71,10 @@
 
 .board-wrapper {
   width: 100%;
-  /* CRITICAL: Tie the board max-size to viewport height so it matches images! */
-  max-width: 45vh; 
+  max-width: 45vh;
   max-height: 45vh;
-  /* Keep it perfectly square */
-  aspect-ratio: 1 / 1; 
-  /* Required for chessground to size its absolute children correctly */
-  position: relative; 
+  aspect-ratio: 1 / 1;
+  position: relative;
 }
 
 /* Force the react-chessground library to strictly obey our wrapper bounds */
@@ -77,18 +86,16 @@
   height: 100% !important;
 }
 
-/* Ensure the FEN container doesn't stretch wider than the board */
-/* Ensure the FEN container is clickable by bringing it to the front */
+/* Keep controls clickable above absolute-positioned board internals */
 .fen-container {
   display: flex;
   width: 100%;
-  max-width: 45vh; 
+  max-width: 45vh;
   align-items: center;
   gap: 10px;
-  margin-top: 1.5rem; 
-  /* FIX: Pop this layer above the invisible chessboard bounds */
-  position: relative; 
-  z-index: 10; 
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 10;
 }
 
 .fen-input {
@@ -99,7 +106,6 @@
   border-radius: 4px;
 }
 
-/* NEW: Styles for the Copy Button */
 .icon-button {
   padding: 8px;
   cursor: pointer;
@@ -115,6 +121,15 @@
 
 .icon-button:hover {
   background-color: #e0e0e0;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.icon-button:disabled:hover {
+  background-color: #f4f4f4;
 }
 
 .icon-button svg {
@@ -138,6 +153,35 @@
   background-color: #555;
 }
 
+.orientation-controls {
+  display: flex;
+  width: 100%;
+  max-width: 45vh;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.orientation-button {
+  flex: 1;
+  background-color: #efefef;
+  color: #333;
+  border: 1px solid #c7c7c7;
+}
+
+.orientation-button:hover {
+  background-color: #e4e4e4;
+}
+
+.orientation-button.is-active {
+  background-color: #345c3a;
+  border-color: #345c3a;
+  color: #fff;
+}
+
+.orientation-button.is-active:hover {
+  background-color: #2b4d31;
+}
+
 /* --- UI COMPONENTS --- */
 .dropzone {
   border: 2px dashed #aaa;
@@ -153,40 +197,12 @@
   background-color: #f0f0f0;
 }
 
-.fen-container {
-  display: flex;
-  width: 100%;
-  max-width: 500px;
-  align-items: center;
-  gap: 10px;
-  margin-top: 1rem;
-}
-
-.fen-input {
-  flex-grow: 1;
-  padding: 8px;
-  font-family: monospace;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.button {
-  padding: 8px 12px;
-  cursor: pointer;
-  background-color: #333;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-.button:hover {
-  background-color: #555;
-}
-
 .placeholder {
   color: #888;
   font-style: italic;
-  margin-top: 2rem;
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
 }
 
 .error {
@@ -209,16 +225,15 @@
   max-width: 45vh;
   gap: 10px;
   margin-top: 10px;
-  /* Ensure the invisible chessboard wrapper doesn't block clicks */
   position: relative;
-  z-index: 10; 
+  z-index: 10;
 }
 
 .link-button {
-  flex: 1; /* Makes both buttons exactly the same width */
+  flex: 1;
   padding: 10px;
   text-align: center;
-  text-decoration: none; /* Removes the underline from the link */
+  text-decoration: none;
   color: white;
   border-radius: 4px;
   font-weight: bold;
@@ -229,31 +244,46 @@
 
 .link-button:hover {
   opacity: 0.9;
-  transform: translateY(-1px); /* Slight lift effect on hover */
+  transform: translateY(-1px);
 }
 
 .link-button:active {
-  transform: translateY(1px); /* Push down effect on click */
+  transform: translateY(1px);
+}
+
+.link-button.is-disabled {
+  background-color: #a1a1a1;
+  pointer-events: none;
+  box-shadow: none;
+  opacity: 0.85;
+  transform: none;
 }
 
 /* Brand Colors */
 .lichess {
-  background-color: #2b2b2b; /* Standard Lichess Dark Gray */
+  background-color: #2b2b2b;
 }
 
 .chesscom {
-  background-color: #769656; /* Chess.com Board Green */
+  background-color: #769656;
 }
 
 /* --- RESPONSIVE MOBILE LAYOUT --- */
-/* If the screen is smaller than 1024px, stack everything vertically so it doesn't get crushed */
 @media (max-width: 1024px) {
   .results-grid {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
   
-  .image-preview {
-    max-height: 60vh;
+  .preview-frame,
+  .board-wrapper,
+  .fen-container,
+  .analysis-buttons,
+  .orientation-controls {
+    max-width: 70vw;
+  }
+
+  .preview-frame {
+    min-height: 70vw;
   }
 }

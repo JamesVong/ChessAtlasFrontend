@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, type MouseEvent } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import axios from 'axios';
 import { Chess } from 'chess.js';
@@ -39,6 +39,10 @@ const ACCEPTED_IMAGE_TYPES = {
   'image/jpeg': ['.jpeg', '.jpg'],
   'image/png': ['.png'],
 };
+const EMPTY_BOARD_FEN = '8/8/8/8/8/8/8/8 w - - 0 1';
+
+const toApiOrientation = (value: Orientation): 'White' | 'Black' =>
+  value === 'white' ? 'White' : 'Black';
 
 const formatBytes = (bytes: number): string => {
   const mb = bytes / (1024 * 1024);
@@ -94,12 +98,13 @@ function App() {
   const [uploadedImage, setUploadedImage] = useState<UploadedFile | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [fen, setFen] = useState<string>('');
-  const [orientation, setOrientation] = useState<Orientation>('white');
+  const [analysisOrientation, setAnalysisOrientation] = useState<Orientation>('white');
+  const [boardOrientation, setBoardOrientation] = useState<Orientation>('white');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
   // --- API CALL FUNCTION (With typed parameters) ---
-  const handleAnalyze = async (imageFile: File) => {
+  const handleAnalyze = useCallback(async (imageFile: File, requestedOrientation: Orientation) => {
     setIsLoading(true);
     setError('');
     setCroppedImage(null);
@@ -107,6 +112,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('image', imageFile);
+    formData.append('orientation', toApiOrientation(requestedOrientation));
 
     try {
       // Tell axios what type of response to expect
@@ -144,7 +150,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // --- IMAGE UPLOAD HANDLER (With typed files) ---
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -160,9 +166,9 @@ function App() {
         preview: URL.createObjectURL(file),
       });
       setUploadedImage(fileWithPreview);
-      handleAnalyze(file);
+      void handleAnalyze(file, analysisOrientation);
     }
-  }, []);
+  }, [analysisOrientation, handleAnalyze]);
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
     const firstRejection = fileRejections[0];
@@ -219,7 +225,7 @@ function App() {
             }) as UploadedFile;
             
             setUploadedImage(fileWithPreview);
-            handleAnalyze(file);
+            void handleAnalyze(file, analysisOrientation);
             break; // Stop after finding the first image
           }
         }
@@ -233,7 +239,7 @@ function App() {
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-  }, []);
+  }, [analysisOrientation, handleAnalyze]);
 
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -245,15 +251,34 @@ function App() {
     setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
   };
 
-  const toggleOrientation = () => {
-    setOrientation(prev => (prev === 'white' ? 'black' : 'white'));
+  const requestAnalysisForOrientation = (nextOrientation: Orientation) => {
+    if (!uploadedImage) return;
+    void handleAnalyze(uploadedImage, nextOrientation);
   };
 
-// --- GENERATE EXTERNAL LINKS ---
-// Replace spaces with %20, but leave slashes alone as requested
-const encodedFen = fen.replace(/ /g, '%20');
-const lichessUrl = `https://lichess.org/analysis/${encodedFen}`;
-const chesscomUrl = `https://www.chess.com/analysis?fen=${encodedFen}`;
+  const handleOrientationSelection = (nextOrientation: Orientation) => {
+    setBoardOrientation(nextOrientation);
+    if (nextOrientation === analysisOrientation) return;
+    setAnalysisOrientation(nextOrientation);
+    requestAnalysisForOrientation(nextOrientation);
+  };
+
+  const toggleOrientation = () => {
+    setBoardOrientation(prev => (prev === 'white' ? 'black' : 'white'));
+  };
+
+  const handleAnalysisLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!fen) {
+      event.preventDefault();
+    }
+  };
+
+  // --- GENERATE EXTERNAL LINKS ---
+  // Replace spaces with %20, but leave slashes alone as requested
+  const encodedFen = fen ? fen.replace(/ /g, '%20') : '';
+  const lichessUrl = encodedFen ? `https://lichess.org/analysis/${encodedFen}` : 'https://lichess.org/analysis';
+  const chesscomUrl = encodedFen ? `https://www.chess.com/analysis?fen=${encodedFen}` : 'https://www.chess.com/analysis';
+  const boardFen = fen || EMPTY_BOARD_FEN;
 
 return (
     <div className="container">
@@ -274,13 +299,12 @@ return (
       </div>
 
       {/* --- BOTTOM SECTION (3 Columns) --- */}
-      {/* Only show this grid if an image is uploaded or FEN exists */}
-      {(uploadedImage || fen) && (
-        <div className="results-grid">
-          
-          {/* Column 1: Original Upload */}
-          <div className="column">
-            <h3>Your Upload</h3>
+      <div className="results-grid">
+        
+        {/* Column 1: Original Upload */}
+        <div className="column">
+          <h3>Your Upload</h3>
+          <div className="preview-frame">
             {uploadedImage ? (
               <img 
                 src={uploadedImage.preview} 
@@ -292,10 +316,12 @@ return (
               <p className="placeholder">Waiting for image...</p>
             )}
           </div>
+        </div>
 
-          {/* Column 2: Cropped API Result */}
-          <div className="column">
-            <h3>Analysis Result</h3>
+        {/* Column 2: Cropped API Result */}
+        <div className="column">
+          <h3>Cropped Image</h3>
+          <div className="preview-frame">
             {croppedImage ? (
               <img 
                 src={croppedImage} 
@@ -308,58 +334,83 @@ return (
               <p className="placeholder">No result yet.</p>
             )}
           </div>
-
-          {/* Column 3: Detected Chessground Position */}
-          <div className="column">
-            <h2>Detected Position</h2>
-            {fen ? (
-              <div className="board-column-content">
-                <div className="board-wrapper">
-                  <Chessground
-                    config={{
-                      fen: fen,
-                      orientation: orientation,
-                      viewOnly: true,
-                    }}
-                  />
-                </div>
-                <div className="fen-container">
-                  <input type="text" readOnly value={fen} className="fen-input" />
-                  
-                  {/* NEW: Copy Button with SVGs */}
-                  <button onClick={handleCopy} className="icon-button" title="Copy FEN">
-                    {copied ? (
-                      // Checkmark Icon
-                      <svg viewBox="0 0 24 24" fill="none" stroke="green" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    ) : (
-                      // Copy Clipboard Icon
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                      </svg>
-                    )}
-                  </button>
-
-                  <button onClick={toggleOrientation} className="button">Flip Board</button>
-                </div>
-                <div className="analysis-buttons">
-                  <a href={lichessUrl} target="_blank" rel="noopener noreferrer" className="link-button lichess">
-                    Lichess
-                  </a>
-                  <a href={chesscomUrl} target="_blank" rel="noopener noreferrer" className="link-button chesscom">
-                    Chess.com
-                  </a>
-                </div>
-              </div>
-            ) : (
-              <p className="placeholder">Awaiting analysis...</p>
-            )}
+          <div className="orientation-controls">
+            <button
+              type="button"
+              className={`button orientation-button ${analysisOrientation === 'white' ? 'is-active' : ''}`}
+              onClick={() => handleOrientationSelection('white')}
+              aria-pressed={analysisOrientation === 'white'}
+            >
+              White
+            </button>
+            <button
+              type="button"
+              className={`button orientation-button ${analysisOrientation === 'black' ? 'is-active' : ''}`}
+              onClick={() => handleOrientationSelection('black')}
+              aria-pressed={analysisOrientation === 'black'}
+            >
+              Black
+            </button>
           </div>
-
         </div>
-      )}
+
+        {/* Column 3: Detected Chessground Position */}
+        <div className="column">
+          <h3>Detected Position</h3>
+          <div className="board-column-content">
+            <div className="board-wrapper">
+              <Chessground
+                config={{
+                  fen: boardFen,
+                  orientation: boardOrientation,
+                  viewOnly: true,
+                }}
+              />
+            </div>
+            <div className="fen-container">
+              <input type="text" readOnly value={fen} placeholder="FEN will appear here after analysis" className="fen-input" />
+              
+              <button onClick={handleCopy} className="icon-button" title="Copy FEN" disabled={!fen} type="button">
+                {copied ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="green" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                )}
+              </button>
+
+              <button onClick={toggleOrientation} className="button" type="button">Flip Board</button>
+            </div>
+            <div className="analysis-buttons">
+              <a
+                href={lichessUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`link-button lichess ${!fen ? 'is-disabled' : ''}`}
+                onClick={handleAnalysisLinkClick}
+                aria-disabled={!fen}
+              >
+                Lichess
+              </a>
+              <a
+                href={chesscomUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`link-button chesscom ${!fen ? 'is-disabled' : ''}`}
+                onClick={handleAnalysisLinkClick}
+                aria-disabled={!fen}
+              >
+                Chess.com
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
