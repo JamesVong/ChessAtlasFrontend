@@ -35,6 +35,11 @@ interface UploadedFile extends File {
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.chess-atlas.com/api/v1/analyze-board';
 const MAX_UPLOAD_SIZE_BYTES = 12 * 1024 * 1024; // 12MB
+const SAMPLE_IMAGES = [
+  '/samples/sample1.png',
+  '/samples/sample2.png',
+  '/samples/sample3.png',
+];
 const ACCEPTED_IMAGE_TYPES = {
   'image/jpeg': ['.jpeg', '.jpg'],
   'image/png': ['.png'],
@@ -251,6 +256,30 @@ function App() {
     setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
   };
 
+  const handleSampleClick = useCallback(async (samplePath: string) => {
+    try {
+      const response = await fetch(samplePath);
+      const blob = await response.blob();
+      const filename = samplePath.split('/').pop() ?? 'sample.jpg';
+      const file = new File([blob], filename, { type: blob.type });
+
+      const validationError = getFileValidationError(file);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+
+      const fileWithPreview = Object.assign(file, {
+        preview: URL.createObjectURL(file),
+      }) as UploadedFile;
+
+      setUploadedImage(fileWithPreview);
+      void handleAnalyze(file, analysisOrientation);
+    } catch {
+      setError('Failed to load sample image.');
+    }
+  }, [analysisOrientation, handleAnalyze]);
+
   const requestAnalysisForOrientation = (nextOrientation: Orientation) => {
     if (!uploadedImage) return;
     void handleAnalyze(uploadedImage, nextOrientation);
@@ -296,6 +325,20 @@ return (
         
         {isLoading && <div className="loading">Analyzing...</div>}
         {error && <div className="error">{error}</div>}
+
+        <div className="sample-thumbnails">
+          {SAMPLE_IMAGES.map((src, i) => (
+            <button
+              key={src}
+              type="button"
+              className="sample-thumbnail"
+              onClick={() => void handleSampleClick(src)}
+              title={`Try sample ${i + 1}`}
+            >
+              <img src={src} alt={`Sample ${i + 1}`} />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* --- BOTTOM SECTION (3 Columns) --- */}

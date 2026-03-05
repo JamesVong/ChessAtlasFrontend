@@ -268,6 +268,38 @@
   background-color: #769656;
 }
 
+/* --- SAMPLE THUMBNAILS --- */
+.sample-thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.sample-thumbnail {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  background: none;
+  transition: border-color 0.2s, transform 0.1s;
+}
+
+.sample-thumbnail:hover {
+  border-color: #345c3a;
+  transform: scale(1.07);
+}
+
+.sample-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* --- RESPONSIVE MOBILE LAYOUT --- */
 @media (max-width: 1024px) {
   .results-grid {
