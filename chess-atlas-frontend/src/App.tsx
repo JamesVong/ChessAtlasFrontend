@@ -344,6 +344,7 @@ return (
               type="button"
               className="sample-thumbnail"
               onClick={() => void handleSampleClick(src)}
+              disabled={isLoading}
               title={`Try sample ${i + 1}`}
             >
               <img src={src} alt={`Sample ${i + 1}`} />
