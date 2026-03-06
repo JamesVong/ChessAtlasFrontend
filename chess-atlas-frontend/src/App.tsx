@@ -296,6 +296,17 @@ function App() {
     setBoardOrientation(prev => (prev === 'white' ? 'black' : 'white'));
   };
 
+  const sideToMove = fen ? (fen.split(' ')[1] as 'w' | 'b') : null;
+
+  const handleSideToMoveChange = (side: 'w' | 'b') => {
+    setFen(prev => {
+      if (!prev) return prev;
+      const parts = prev.split(' ');
+      parts[1] = side;
+      return parts.join(' ');
+    });
+  };
+
   const handleAnalysisLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!fen) {
       event.preventDefault();
@@ -449,6 +460,27 @@ return (
               >
                 Chess.com
               </a>
+            </div>
+            <div className="fen-settings">
+              <span className="fen-settings-label">Side to move</span>
+              <div className="fen-settings-switches">
+                <button
+                  type="button"
+                  className={`switch-button ${sideToMove === 'w' ? 'is-active' : ''}`}
+                  onClick={() => handleSideToMoveChange('w')}
+                  disabled={!fen}
+                >
+                  White
+                </button>
+                <button
+                  type="button"
+                  className={`switch-button ${sideToMove === 'b' ? 'is-active' : ''}`}
+                  onClick={() => handleSideToMoveChange('b')}
+                  disabled={!fen}
+                >
+                  Black
+                </button>
+              </div>
             </div>
           </div>
         </div>

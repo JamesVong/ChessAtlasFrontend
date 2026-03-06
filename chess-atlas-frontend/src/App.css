@@ -268,6 +268,56 @@
   background-color: #769656;
 }
 
+/* --- FEN SETTINGS SWITCHES --- */
+.fen-settings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 45vh;
+  margin-top: 10px;
+  position: relative;
+  z-index: 10;
+}
+
+.fen-settings-label {
+  font-size: 0.78rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.fen-settings-switches {
+  display: flex;
+  gap: 6px;
+}
+
+.switch-button {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  background-color: #efefef;
+  color: #333;
+  border: 1px solid #c7c7c7;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.switch-button:hover:not(:disabled) {
+  background-color: #e4e4e4;
+}
+
+.switch-button.is-active {
+  background-color: #345c3a;
+  border-color: #345c3a;
+  color: #fff;
+}
+
+.switch-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* --- SAMPLE THUMBNAILS --- */
 .sample-thumbnails {
   display: flex;
@@ -311,6 +361,7 @@
   .board-wrapper,
   .fen-container,
   .analysis-buttons,
+  .fen-settings,
   .orientation-controls {
     max-width: 70vw;
   }
