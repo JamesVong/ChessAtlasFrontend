@@ -307,6 +307,22 @@ function App() {
     });
   };
 
+  const castlingRights = fen ? (fen.split(' ')[2] ?? '-') : null;
+
+  const handleCastlingToggle = (right: 'K' | 'Q' | 'k' | 'q') => {
+    setFen(prev => {
+      if (!prev) return prev;
+      const parts = prev.split(' ');
+      const current = parts[2] ?? '-';
+      const active = current === '-' ? '' : current;
+      const next = active.includes(right)
+        ? active.replace(right, '')
+        : active + right;
+      parts[2] = (['K', 'Q', 'k', 'q'] as const).filter(r => next.includes(r)).join('') || '-';
+      return parts.join(' ');
+    });
+  };
+
   const handleAnalysisLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!fen) {
       event.preventDefault();
@@ -481,6 +497,53 @@ return (
                 >
                   Black
                 </button>
+              </div>
+            </div>
+            <div className="fen-settings castling-settings">
+              <span className="fen-settings-label">Castling</span>
+              <div className="castling-groups">
+                <div className="castling-group">
+                  <span className="castling-group-label">W</span>
+                  <button
+                    type="button"
+                    className={`switch-button ${castlingRights?.includes('K') ? 'is-active' : ''}`}
+                    onClick={() => handleCastlingToggle('K')}
+                    disabled={!fen}
+                    title="White kingside (O-O)"
+                  >
+                    O-O
+                  </button>
+                  <button
+                    type="button"
+                    className={`switch-button ${castlingRights?.includes('Q') ? 'is-active' : ''}`}
+                    onClick={() => handleCastlingToggle('Q')}
+                    disabled={!fen}
+                    title="White queenside (O-O-O)"
+                  >
+                    O-O-O
+                  </button>
+                </div>
+                <div className="castling-group">
+                  <span className="castling-group-label">B</span>
+                  <button
+                    type="button"
+                    className={`switch-button ${castlingRights?.includes('k') ? 'is-active' : ''}`}
+                    onClick={() => handleCastlingToggle('k')}
+                    disabled={!fen}
+                    title="Black kingside (O-O)"
+                  >
+                    O-O
+                  </button>
+                  <button
+                    type="button"
+                    className={`switch-button ${castlingRights?.includes('q') ? 'is-active' : ''}`}
+                    onClick={() => handleCastlingToggle('q')}
+                    disabled={!fen}
+                    title="Black queenside (O-O-O)"
+                  >
+                    O-O-O
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -326,6 +326,30 @@ body {
   cursor: not-allowed;
 }
 
+.castling-settings {
+  align-items: flex-start;
+}
+
+.castling-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.castling-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.castling-group-label {
+  font-size: 0.78rem;
+  color: #666;
+  width: 1rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 /* --- SAMPLE THUMBNAILS --- */
 .sample-thumbnails {
   display: flex;
