@@ -1,5 +1,13 @@
 /* src/App.css */
 
+/* --- GLOBAL RESET --- */
+html {
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+}
+
 /* --- OVERALL LAYOUT --- */
 .container {
   font-family: sans-serif;
