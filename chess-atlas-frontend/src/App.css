@@ -1,11 +1,387 @@
 /* src/App.css */
 
 /* --- GLOBAL RESET --- */
+:root {
+  --navbar-height: 48px;
+}
+
 html {
   overflow-x: hidden;
 }
 body {
   margin: 0;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+  background-color: #1a1a1a;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand {
+  color: white;
+  font-weight: bold;
+  font-size: 1.15rem;
+  font-family: sans-serif;
+  padding: 0.9rem 0;
+  letter-spacing: 0.02em;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 0;
+}
+
+.navbar-link {
+  color: #aaa;
+  text-decoration: none;
+  padding: 0.9rem 1.1rem;
+  font-family: sans-serif;
+  font-size: 0.92rem;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.navbar-link:hover {
+  color: #fff;
+}
+
+.navbar-link.active {
+  color: #fff;
+  border-bottom-color: #769656;
+}
+
+/* --- EXPLORER PAGE --- */
+.explorer-container {
+  font-family: sans-serif;
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+  /* Fill whatever height the shell leaves after the navbar */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-main {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Left column: board */
+.explorer-board-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.explorer-board-wrapper {
+  /* Explicit equal width + height so chessground reads correct dims at init */
+  width: min(60vh, 600px);
+  height: min(60vh, 600px);
+  position: relative;
+  /* Isolate chessground's stacking context so it can't overlap sibling elements */
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.explorer-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* Stay above chessground in the stacking order */
+  position: relative;
+  z-index: 10;
+}
+
+.ctrl-btn {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.reset-btn {
+  background-color: #7a2a2a;
+}
+
+.reset-btn:hover {
+  background-color: #9c3535;
+}
+
+/* Board orientation (White / Black) buttons */
+.explorer-orientation {
+  display: flex;
+  gap: 8px;
+  margin-top: 0.5rem;
+  width: min(60vh, 600px);
+  position: relative;
+  z-index: 10;
+}
+
+.explorer-orientation .orientation-button {
+  flex: 1;
+}
+
+/* Move history strip */
+.move-history {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+  margin-top: 0.75rem;
+  width: 100%;
+  max-height: 110px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  background: #fafafa;
+  /* Stay above chessground in the stacking order */
+  position: relative;
+  z-index: 10;
+}
+
+.placeholder-moves {
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.82rem;
+}
+
+.move-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.move-number {
+  color: #999;
+  padding: 2px 3px;
+  user-select: none;
+}
+
+.move-san {
+  padding: 2px 5px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #222;
+  line-height: 1.4;
+}
+
+.move-san:hover {
+  background-color: #eee;
+  border-color: #ddd;
+}
+
+.move-san.is-active {
+  background-color: #345c3a;
+  color: #fff;
+  border-color: #345c3a;
+}
+
+/* Right column: video panel */
+.explorer-video-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.playlist-count {
+  font-size: 0.78rem;
+  color: #999;
+  margin: 0;
+  padding: 0 2px;
+  font-family: sans-serif;
+  flex-shrink: 0;
+}
+
+.video-playlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.playlist-status {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.load-more-btn {
+  display: block;
+  width: calc(100% - 1rem);
+  margin: 0.5rem auto 1rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  background: #f0f0f0;
+  color: #555;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.load-more-btn:hover {
+  background: #e4e4e4;
+}
+
+.video-card {
+  background: #f9f9f9;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.video-card.is-open {
+  border-color: #345c3a;
+}
+
+.video-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+  box-sizing: border-box;
+}
+
+.video-card-header:hover {
+  background: #f0f0f0;
+}
+
+.video-card.is-open .video-card-header {
+  background: #e8f3ea;
+}
+
+.video-card-chevron {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.video-card-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.video-card-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.video-thumbnail {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #ddd;
+}
+
+.video-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* allow text-overflow: ellipsis to work */
+  flex: 1;
+}
+
+.video-card-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: sans-serif;
+}
+
+.video-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-timestamp {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #444;
+}
+
+.video-orientation-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+  width: fit-content;
+  font-family: sans-serif;
+}
+
+.video-orientation-badge.white {
+  background-color: #f0f0f0;
+  color: #444;
+  border: 1px solid #ccc;
+}
+
+.video-orientation-badge.black {
+  background-color: #2b2b2b;
+  color: #f0f0f0;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 860px) {
+  .explorer-main {
+    flex-direction: column;
+  }
+
+  .explorer-board-wrapper {
+    width: min(80vw, 480px);
+    height: min(80vw, 480px);
+  }
 }
 
 /* --- OVERALL LAYOUT --- */
@@ -16,6 +392,8 @@ body {
   padding: 1rem 2rem;
   box-sizing: border-box;
   width: 100%;
+  flex: 1;
+  overflow-y: auto;
   min-height: 100vh;
 }
 
