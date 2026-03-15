@@ -372,15 +372,122 @@ body {
   color: #f0f0f0;
 }
 
+/* --- Playlist toggle (hidden on desktop) --- */
+.playlist-toggle-btn {
+  display: none;
+}
+
+.playlist-close-btn {
+  display: none;
+}
+
 /* Responsive: stack on small screens */
 @media (max-width: 860px) {
+  .explorer-container {
+    padding: 0.75rem;
+  }
+
   .explorer-main {
     flex-direction: column;
+    align-items: center;
   }
 
   .explorer-board-wrapper {
-    width: min(80vw, 480px);
-    height: min(80vw, 480px);
+    width: min(72vw, 400px);
+    height: min(72vw, 400px);
+  }
+
+  .explorer-orientation {
+    width: min(72vw, 400px);
+    gap: 4px;
+    margin-top: 0.35rem;
+  }
+
+  .explorer-orientation .orientation-button {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+
+  .explorer-controls {
+    margin-top: 0.4rem;
+    gap: 4px;
+  }
+
+  .ctrl-btn {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+
+  .move-history {
+    margin-top: 0.4rem;
+    max-height: 60px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+
+  /* Playlist toggle button */
+  .playlist-toggle-btn {
+    display: block;
+    width: 100%;
+    max-width: min(72vw, 400px);
+    margin: 0.5rem auto 0;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: sans-serif;
+    background: #345c3a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .playlist-toggle-btn:hover {
+    background: #2b4d31;
+  }
+
+  .playlist-count {
+    text-align: center;
+  }
+
+  /* Slide-up panel */
+  .explorer-video-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: var(--navbar-height);
+    background: #fff;
+    z-index: 200;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    padding: 1rem;
+    box-sizing: border-box;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  }
+
+  .explorer-video-panel.is-open {
+    transform: translateY(0);
+  }
+
+  .playlist-close-btn {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+
+  .playlist-close-btn:hover {
+    color: #222;
   }
 }
 

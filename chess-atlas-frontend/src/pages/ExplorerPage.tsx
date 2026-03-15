@@ -76,6 +76,7 @@ export function ExplorerPage() {
   const [, startTransition] = useTransition();
   const [videoTitles, setVideoTitles] = useState<Map<string, string>>(new Map());
   const playlistRef = useRef<HTMLDivElement>(null);
+  const [playlistOpen, setPlaylistOpen] = useState(false);
   // Incremented on every fetch; lets us discard stale responses from previous positions
   const fetchSeqRef = useRef(0);
   // Persists fetched titles across position changes so we don't re-fetch
@@ -277,11 +278,25 @@ export function ExplorerPage() {
           </div>
         </div>
 
-        {/* Right: video playlist with inline embeds */}
-        <div className="explorer-video-panel">
-          {!isSearching && videoResults.length > 0 && (
-            <p className="playlist-count">{videoResults.length} result{videoResults.length !== 1 ? 's' : ''}</p>
-          )}
+        {/* Result count + mobile playlist toggle */}
+        {!isSearching && videoResults.length > 0 && (
+          <p className="playlist-count">{videoResults.length} result{videoResults.length !== 1 ? 's' : ''}</p>
+        )}
+        <button
+          type="button"
+          className="playlist-toggle-btn"
+          onClick={() => setPlaylistOpen(o => !o)}
+        >
+          {playlistOpen ? 'Hide Playlist' : 'Show Playlist'}
+        </button>
+
+        {/* Right / bottom: video playlist with inline embeds */}
+        <div className={`explorer-video-panel${playlistOpen ? ' is-open' : ''}`}>
+          <button
+            type="button"
+            className="playlist-close-btn"
+            onClick={() => setPlaylistOpen(false)}
+          >&times;</button>
           <div className="video-playlist" ref={playlistRef}>
             {isSearching && <p className="playlist-status">Searching...</p>}
             {!isSearching && videoResults.length === 0 && (
