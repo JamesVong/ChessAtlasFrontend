@@ -146,11 +146,11 @@ body {
 .move-history {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px 0;
   margin-top: 0.75rem;
   width: 100%;
-  max-height: 110px;
+  height: 110px;
   overflow-y: auto;
   font-family: monospace;
   font-size: 0.85rem;
@@ -420,6 +420,7 @@ body {
 
   .move-history {
     margin-top: 0.4rem;
+    height: 60px;
     max-height: 60px;
     padding: 4px 6px;
     font-size: 0.75rem;
@@ -488,6 +489,75 @@ body {
 
   .playlist-close-btn:hover {
     color: #222;
+  }
+}
+
+/* Landscape phones: side-by-side board + playlist (no overlay) */
+@media (max-width: 860px) and (orientation: landscape) {
+  .explorer-container {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .explorer-main {
+    flex-direction: row;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  /* Board sized to fit available height (viewport - navbar - controls row) */
+  .explorer-board-wrapper {
+    width: min(calc(100dvh - 140px), 290px);
+    height: min(calc(100dvh - 140px), 290px);
+  }
+
+  .explorer-orientation {
+    width: min(calc(100dvh - 140px), 290px);
+    margin-top: 0.25rem;
+  }
+
+  .explorer-controls {
+    margin-top: 0.25rem;
+  }
+
+  .ctrl-btn {
+    padding: 3px 7px;
+    font-size: 0.75rem;
+  }
+
+  .explorer-orientation .orientation-button {
+    padding: 3px 6px;
+    font-size: 0.75rem;
+  }
+
+  /* Hide move history and toggle — playlist is always visible inline */
+  .move-history,
+  .playlist-toggle-btn,
+  .playlist-count {
+    display: none;
+  }
+
+  /* Restore playlist panel to normal in-flow rendering */
+  .explorer-video-panel {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    z-index: auto;
+    transition: none;
+    overflow: hidden;
+  }
+
+  .playlist-close-btn {
+    display: none;
   }
 }
 

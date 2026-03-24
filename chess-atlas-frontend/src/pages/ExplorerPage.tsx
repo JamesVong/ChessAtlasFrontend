@@ -141,6 +141,13 @@ export function ExplorerPage() {
     if (playlistRef.current) playlistRef.current.scrollTop = 0;
   }, [videoResults]);
 
+  // Clear chessground's cached board bounds whenever the layout may shift
+  // (move-history growing changes board-panel height without a scroll/resize event,
+  //  which would otherwise leave chessground with a stale bounding rect)
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [history.length]);
+
   // Scroll the opened card to the top of the playlist
   useEffect(() => {
     if (!selectedVideo || !playlistRef.current) return;
