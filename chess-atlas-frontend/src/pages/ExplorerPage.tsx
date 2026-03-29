@@ -286,9 +286,11 @@ export function ExplorerPage() {
         </div>
 
         {/* Result count + mobile playlist toggle */}
-        {!isSearching && videoResults.length > 0 && (
-          <p className="playlist-count">{videoResults.length} result{videoResults.length !== 1 ? 's' : ''}</p>
-        )}
+        <p className="playlist-count">
+          {!isSearching && videoResults.length > 0
+            ? `${videoResults.length} result${videoResults.length !== 1 ? 's' : ''}`
+            : '\u00A0'}
+        </p>
         <button
           type="button"
           className="playlist-toggle-btn"
