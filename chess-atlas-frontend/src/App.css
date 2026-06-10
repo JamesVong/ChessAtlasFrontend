@@ -83,6 +83,12 @@ body {
   align-items: stretch;
   flex: 1;
   min-height: 0;
+  /* Board square size. Must use dvh (visible viewport, same unit as the
+     100dvh app shell) — NOT vh: on iPad Safari 100vh includes the area behind
+     the toolbar, which oversized the board and let the flex column squash it
+     non-square. 320px ≈ navbar + page padding + controls + orientation row +
+     move history below the board. */
+  --board-size: clamp(240px, calc(100dvh - 320px), 600px);
 }
 
 /* Left column: board */
@@ -96,8 +102,12 @@ body {
 
 .explorer-board-wrapper {
   /* Explicit equal width + height so chessground reads correct dims at init */
-  width: min(60vh, 600px);
-  height: min(60vh, 600px);
+  width: var(--board-size);
+  height: var(--board-size);
+  /* Never let flex shrink the board vertically: a non-square board misaligns
+     pieces (positioned on a JS pixel grid) from the squares (square
+     background image cropped by cover). Worst case the panel scrolls. */
+  flex-shrink: 0;
   position: relative;
   /* Isolate chessground's stacking context so it can't overlap sibling elements */
   isolation: isolate;
@@ -133,7 +143,7 @@ body {
   display: flex;
   gap: 8px;
   margin-top: 0.5rem;
-  width: min(60vh, 600px);
+  width: var(--board-size);
   position: relative;
   z-index: 10;
 }
@@ -390,15 +400,10 @@ body {
   .explorer-main {
     flex-direction: column;
     align-items: center;
-  }
-
-  .explorer-board-wrapper {
-    width: min(72vw, 400px);
-    height: min(72vw, 400px);
+    --board-size: min(72vw, 400px);
   }
 
   .explorer-orientation {
-    width: min(72vw, 400px);
     gap: 4px;
     margin-top: 0.35rem;
   }
@@ -430,7 +435,7 @@ body {
   .playlist-toggle-btn {
     display: block;
     width: 100%;
-    max-width: min(72vw, 400px);
+    max-width: var(--board-size);
     margin: 0.5rem auto 0;
     padding: 10px;
     font-size: 0.9rem;
@@ -502,16 +507,11 @@ body {
     flex-direction: row;
     gap: 0.75rem;
     align-items: stretch;
-  }
-
-  /* Board sized to fit available height (viewport - navbar - controls row) */
-  .explorer-board-wrapper {
-    width: min(calc(100dvh - 140px), 290px);
-    height: min(calc(100dvh - 140px), 290px);
+    /* Board sized to fit available height (viewport - navbar - controls row) */
+    --board-size: min(calc(100dvh - 140px), 290px);
   }
 
   .explorer-orientation {
-    width: min(calc(100dvh - 140px), 290px);
     margin-top: 0.25rem;
   }
 
@@ -640,13 +640,16 @@ body {
   position: relative;
 }
 
-/* Force the react-chessground library to strictly obey our wrapper bounds */
+/* Force the react-chessground library to strictly obey our wrapper bounds.
+   display: block overrides the wrapper's inline `display: table`, whose
+   percentage-height resolution is unreliable in WebKit (iPad Safari). */
 .cg-wrap {
   position: absolute !important;
   top: 0;
   left: 0;
   width: 100% !important;
   height: 100% !important;
+  display: block !important;
 }
 
 /* Keep controls clickable above absolute-positioned board internals */
