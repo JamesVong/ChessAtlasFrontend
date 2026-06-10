@@ -19,6 +19,8 @@ interface VideoResult {
   video_id: string;
   timestamp_seconds: number;
   orientation: 'white' | 'black';
+  title?: string | null;
+  author_name?: string | null;
 }
 
 interface HistoryEntry {
@@ -74,13 +76,10 @@ export function ExplorerPage() {
   const [selectedVideo, setSelectedVideo] = useState<VideoResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [, startTransition] = useTransition();
-  const [videoTitles, setVideoTitles] = useState<Map<string, string>>(new Map());
   const playlistRef = useRef<HTMLDivElement>(null);
   const [playlistOpen, setPlaylistOpen] = useState(false);
   // Incremented on every fetch; lets us discard stale responses from previous positions
   const fetchSeqRef = useRef(0);
-  // Persists fetched titles across position changes so we don't re-fetch
-  const titleCacheRef = useRef<Map<string, string>>(new Map());
 
   const currentEntry = history[historyIndex];
   const currentFen = currentEntry.fen;
@@ -114,27 +113,6 @@ export function ExplorerPage() {
   useEffect(() => {
     void fetchVideos(INITIAL_FEN);
   }, [fetchVideos]);
-
-  // Fetch YouTube titles for any video IDs not yet in cache
-  useEffect(() => {
-    if (videoResults.length === 0) return;
-    const uncachedIds = [...new Set(videoResults.map(v => v.video_id))].filter(
-      id => !titleCacheRef.current.has(id),
-    );
-    if (uncachedIds.length === 0) {
-      setVideoTitles(new Map(titleCacheRef.current));
-      return;
-    }
-    void Promise.allSettled(
-      uncachedIds.map(id =>
-        fetch(
-          `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`,
-        )
-          .then(r => r.json() as Promise<{ title: string }>)
-          .then(data => { titleCacheRef.current.set(id, data.title); }),
-      ),
-    ).then(() => { setVideoTitles(new Map(titleCacheRef.current)); });
-  }, [videoResults]);
 
   // Scroll playlist to top when results change
   useEffect(() => {
@@ -333,8 +311,8 @@ export function ExplorerPage() {
                       loading="lazy"
                     />
                     <div className="video-card-info">
-                      {videoTitles.get(video.video_id) && (
-                        <span className="video-card-title">{videoTitles.get(video.video_id)}</span>
+                      {video.title && (
+                        <span className="video-card-title">{video.title}</span>
                       )}
                       <div className="video-card-meta">
                         <span className="video-timestamp">{formatTimestamp(video.timestamp_seconds)}</span>
