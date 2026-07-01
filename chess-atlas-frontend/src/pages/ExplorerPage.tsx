@@ -14,6 +14,7 @@ const LOOKUP_API_URL =
 const TIMESTAMP_OFFSET_SECONDS = 1;
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 const PAGE_SIZE = 100;
+const THUMBNAIL_EAGER_COUNT = 20;
 
 interface VideoResult {
   video_id: string;
@@ -61,6 +62,21 @@ function getLegalMoves(fen: string): Map<Key, Key[]> {
   return dests;
 }
 
+function thumbnailUrl(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+}
+
+/** Kick off thumbnail downloads for the first videos so they're cached before the cards render. */
+function preloadThumbnails(results: VideoResult[]) {
+  const seen = new Set<string>();
+  for (const r of results) {
+    if (seen.has(r.video_id)) continue;
+    seen.add(r.video_id);
+    new Image().src = thumbnailUrl(r.video_id);
+    if (seen.size >= THUMBNAIL_EAGER_COUNT) break;
+  }
+}
+
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -100,6 +116,7 @@ export function ExplorerPage() {
       if (seq !== fetchSeqRef.current) return; // stale — a newer request is in flight
       if (response.data.status === 'success') {
         const results = deduplicateResults(response.data.data);
+        preloadThumbnails(results);
         startTransition(() => { setVideoResults(results); });
       }
     } catch (err) {
@@ -305,10 +322,11 @@ export function ExplorerPage() {
                     onClick={() => setSelectedVideo(isOpen ? null : video)}
                   >
                     <img
-                      src={`https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`}
+                      src={thumbnailUrl(video.video_id)}
                       alt="Video thumbnail"
                       className="video-thumbnail"
-                      loading="lazy"
+                      loading={i < THUMBNAIL_EAGER_COUNT ? 'eager' : 'lazy'}
+                      fetchPriority={i < THUMBNAIL_EAGER_COUNT ? 'high' : 'auto'}
                     />
                     <div className="video-card-info">
                       {video.title && (
